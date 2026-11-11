@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kalkulator OBE & Invers Matriks</title>
+    <style>
+        :root {
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --primary: #0f766e;
+            --primary-hover: #115e59;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border-color: #cbd5e1;
+            --radius: 12px;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 750px;
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: var(--radius);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+        }
+
+        h2 {
+            text-align: center;
+            color: var(--primary);
+            margin-bottom: 25px;
+            font-size: 1.5rem;
+        }
+
+        .control-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .input-control {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-muted);
+        }
+
+        select {
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 0.95rem;
+            background-color: #fff;
+            color: var(--text-main);
+            cursor: pointer;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        select:focus {
+            border-color: var(--primary);
+        }
+
+        .matrix-section {
+            background: #f1f5f9;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            overflow-x: auto;
+        }
+
+        .helper-text {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 25px;
+            font-style: italic;
+        }
+
+        .matrix-grid-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .matrix-box {
+            display: grid;
+            gap: 8px;
+        }
+
+        .matrix-box input {
+            width: 55px;
+            height: 40px;
+            text-align: center;
+            font-size: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            outline: none;
+            background: #fff;
+            transition: all 0.2s;
+        }
+
+        .matrix-box input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(15, 118, 110, 0.15);
+        }
+
+        .separator {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--text-muted);
+        }
+
+        .btn-container {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            min-width: 130px;
+        }
+
+        .btn-hitung {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-hitung:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-secondary {
+            background-color: #e2e8f0;
+            color: var(--text-main);
+        }
+
+        .btn-secondary:hover {
+            background-color: #cbd5e1;
+        }
+
+        .btn-copy {
+            background-color: #0284c7;
+            color: white;
+        }
+
+        .btn-copy:hover {
+            background-color: #0369a1;
+        }
+
+        .result-section {
+            background: #f8fafc;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .result-section h3 {
+            margin-top: 0;
+            font-size: 1rem;
+            color: var(--primary);
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 8px;
+        }
+
+        .step-output {
+            font-family: monospace;
+            white-space: pre-wrap;
+            background: #ffffff;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+            font-size: 0.9rem;
+            max-height: 250px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Kalkulator OBE & Invers Matriks</h2>
+
+    <!-- Kontrol Dropdown Pilihan Ordo & Mode -->
+    <div class="control-group">
+        <div class="input-control">
+            <label for="ordoSelect">Ordo Matriks</label>
+            <select id="ordoSelect" onchange="renderMatrixInputs()">
+                <option value="2">2 × 2</option>
+                <option value="3" selected>3 × 3</option>
+                <option value="4">4 × 4</option>
+            </select>
+        </div>
+        <div class="input-control">
+            <label for="modeSelect">Mode Perhitungan</label>
+            <select id="modeSelect" onchange="renderMatrixInputs()">
+                <option value="spl">Sistem Persamaan Linear [A | b]</option>
+                <option value="invers">Invers Matriks [A | I]</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Area Input Matriks Dinamis -->
+    <div class="matrix-section">
+        <div class="matrix-grid-container" id="matrixContainer">
+            <!-- Diisi otomatis oleh JavaScript -->
+        </div>
+    </div>
+    <div class="helper-text">* Kolom kosong yang tidak diisi akan otomatis dianggap bernilai 0. Nilai akan tetap aman saat mengganti mode.</div>
+
+    <!-- Tombol Aksi -->
+    <div class="btn-container">
+        <button class="btn-hitung" onclick="hitungOBE()">Hitung Kalkulasi</button>
+        <button class="btn-secondary" onclick="isiContoh()">Isi Contoh</button>
+        <button class="btn-secondary" onclick="resetForm()">Reset</button>
+        <button class="btn-copy" onclick="salinHasil()">Salin Hasil</button>
+    </div>
+
+    <!-- Area Hasil & Langkah -->
+    <div class="result-section">
+        <h3>Hasil & Langkah Operasi Baris Elementer (OBE)</h3>
+        <div class="step-output" id="outputArea">Silakan masukkan nilai matriks lalu klik tombol "Hitung Kalkulasi".</div>
+    </div>
+</div>
+
+<script>
+    // Fungsi untuk menyimpan data input yang sedang diketik sebelum elemen di-render ulang
+    function getExistingValues() {
+        const oldContainer = document.getElementById('matrixContainer');
+        const inputs = oldContainer.querySelectorAll('input');
+        let values = {};
+        inputs.forEach(input => {
+            values[input.id] = input.value;
+        });
+        return values;
+    }
+
+    function renderMatrixInputs() {
+        const oldValues = getExistingValues();
+        const n = parseInt(document.getElementById('ordoSelect').value);
+        const mode = document.getElementById('modeSelect').value;
+        const container = document.getElementById('matrixContainer');
+        container.innerHTML = '';
+
+        // Matriks A (n x n)
+        const boxA = document.createElement('div');
+        boxA.className = 'matrix-box';
+        boxA.style.gridTemplateColumns = `repeat(${n}, 55px)`;
+
+        for (let i = 0; i < n; i++) {
+            for (let j = 0; j < n; j++) {
+                const input = document.createElement('input');
+                input.type = 'number';
+                input.step = 'any';
+                input.id = `a_${i}_${j}`;
+                
+                // Pulihkan nilai lama jika ada, jika tidak kosongkan/atur default
+                if (oldValues[`a_${i}_${j}`] !== undefined) {
+                    input.value = oldValues[`a_${i}_${j}`];
+                } else {
+                    input.placeholder = '0';
+                }
+                boxA.appendChild(input);
+            }
+        }
+        container.appendChild(boxA);
+
+        // Pemisah
+        const sep = document.createElement('div');
+        sep.className = 'separator';
+        sep.innerText = '|';
+        container.appendChild(sep);
+
+        // Sisi Kanan (Vektor b atau Matriks Identitas I)
+        const boxB = document.createElement('div');
+        boxB.className = 'matrix-box';
+        const colsRight = (mode === 'spl') ? 1 : n;
+        boxB.style.gridTemplateColumns = `repeat(${colsRight}, 55px)`;
+
+        for (let i = 0; i < n; i++) {
+            for (let j = 0; j < colsRight; j++) {
+                const input = document.createElement('input');
+                input.type = 'number';
+                input.step = 'any';
+                input.id = `b_${i}_${j}`;
+                
+                if (oldValues[`b_${i}_${j}`] !== undefined) {
+                    input.value = oldValues[`b_${i}_${j}`];
+                } else {
+                    if (mode === 'invers') input.value = (i === j ? '1' : '0');
+                    else input.placeholder = '0';
+                }
+                boxB.appendChild(input);
+            }
+        }
+        container.appendChild(boxB);
+    }
+
+    function isiContoh() {
+        const n = parseInt(document.getElementById('ordoSelect').value);
+        const mode = document.getElementById('modeSelect').value;
+
+        if (n === 3) {
+            const sampleA = [[2, 1, -1], [-3, -1, 2], [-2, 1, 2]];
+            const sampleB = [8, -11, -3];
+
+            for (let i = 0; i < 3; i++) {
+                for (let j = 0; j < 3; j++) {
+                    document.getElementById(`a_${i}_${j}`).value = sampleA[i][j];
+                }
+            }
+
+            if (mode === 'spl') {
+                for (let i = 0; i < 3; i++) {
+                    document.getElementById(`b_${i}_0`).value = sampleB[i];
+                }
+            }
+        } else {
+            alert('Fitur isi contoh tersedia untuk ordo 3x3.');
+        }
+    }
+
+    function resetForm() {
+        const n = parseInt(document.getElementById('ordoSelect').value);
+        const mode = document.getElementById('modeSelect').value;
+        const container = document.getElementById('matrixContainer');
+        container.innerHTML = '';
+        renderMatrixInputs();
+        document.getElementById('outputArea').innerText = 'Form telah direset.';
+    }
+
+    function salinHasil() {
+        const outputText = document.getElementById('outputArea').innerText;
+        navigator.clipboard.writeText(outputText).then(() => {
+            alert('Hasil berhasil disalin ke clipboard!');
+        }).catch(err => {
+            alert('Gagal menyalin teks.');
+        });
+    }
+
+    function hitungOBE() {
+        const n = parseInt(document.getElementById('ordoSelect').value);
+        const mode = document.getElementById('modeSelect').value;
+        const colsRight = (mode === 'spl') ? 1 : n;
+
+        let matrix = [];
+        for (let i = 0; i < n; i++) {
+            let row = [];
+            for (let j = 0; j < n; j++) {
+                let val = parseFloat(document.getElementById(`a_${i}_${j}`).value);
+                row.push(isNaN(val) ? 0 : val);
+            }
+            for (let j = 0; j < colsRight; j++) {
+                let val = parseFloat(document.getElementById(`b_${i}_${j}`).value);
+                row.push(isNaN(val) ? 0 : val);
+            }
+            matrix.push(row);
+        }
+
+        let log = "Memulai proses Eliminasi Gauss-Jordan...\n\n";
+
+        for (let i = 0; i < n; i++) {
+            let pivot = matrix[i][i];
+            if (Math.abs(pivot) < 1e-9) {
+                let swapRow = -1;
+                for (let k = i + 1; k < n; k++) {
+                    if (Math.abs(matrix[k][i]) > 1e-9) {
+                        swapRow = k;
+                        break;
+                    }
+                }
+                if (swapRow !== -1) {
+                    let temp = matrix[i];
+                    matrix[i] = matrix[swapRow];
+                    matrix[swapRow] = temp;
+                    pivot = matrix[i][i];
+                    log += `Tukar Baris ${i+1} dengan Baris ${swapRow+1}\n`;
+                }
+            }
+
+            if (Math.abs(pivot) < 1e-9) {
+                document.getElementById('outputArea').innerText = log + "\nMatriks singular atau tidak memiliki solusi unik (determinan nol).";
+                return;
+            }
+
+            for (let j = i; j < n + colsRight; j++) {
+                matrix[i][j] /= pivot;
+            }
+            log += `Normalisasi Baris ${i+1} (B${i+1} / ${pivot.toFixed(2)})\n`;
+
+            for (let k = 0; k < n; k++) {
+                if (k !== i) {
+                    let factor = matrix[k][i];
+                    for (let j = i; j < n + colsRight; j++) {
+                        matrix[k][j] -= factor * matrix[i][j];
+                    }
+                }
+            }
+        }
+
+        log += "\n--- Hasil Akhir Matriks Augmented ---\n";
+        for (let i = 0; i < n; i++) {
+            let rowStr = "[ ";
+            for (let j = 0; j < n + colsRight; j++) {
+                let val = Math.abs(matrix[i][j]) < 1e-9 ? 0 : matrix[i][j];
+                rowStr += val.toFixed(2) + " ";
+                if (j === n - 1) rowStr += "| ";
+            }
+            rowStr += "]\n";
+            log += rowStr;
+        }
+
+        if (mode === 'spl') {
+            log += "\nSolusi Variabel:\n";
+            for (let i = 0; i < n; i++) {
+                let val = Math.abs(matrix[i][n]) < 1e-9 ? 0 : matrix[i][n];
+                log += `x${i+1} = ${val.toFixed(2)}\n`;
+            }
+        } else {
+            log += "\nHasil Invers Matriks (Sisi Kanan):\n";
+            for (let i = 0; i < n; i++) {
+                let rowStr = "[ ";
+                for (let j = n; j < 2 * n; j++) {
+                    let val = Math.abs(matrix[i][j]) < 1e-9 ? 0 : matrix[i][j];
+                    rowStr += val.toFixed(2) + " ";
+                }
+                rowStr += "]\n";
+                log += rowStr;
+            }
+        }
+
+        document.getElementById('outputArea').innerText = log;
+    }
+
+    window.onload = function() {
+        renderMatrixInputs();
+    };
+</script>
+
+</body>
+</html>
