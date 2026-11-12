@@ -28,7 +28,7 @@
 
         .container {
             width: 100%;
-            max-width: 750px;
+            max-width: 800px;
             background: var(--card-bg);
             padding: 30px;
             border-radius: var(--radius);
@@ -188,16 +188,46 @@
             padding-bottom: 8px;
         }
 
-        .step-output {
-            font-family: monospace;
-            white-space: pre-wrap;
+        /* Container Kartu Langkah Modern */
+        .steps-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            max-height: 450px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+
+        .step-card {
             background: #ffffff;
-            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-left: 4px solid var(--primary);
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+        }
+
+        .step-card h4 {
+            margin: 0 0 8px 0;
+            font-size: 0.95rem;
+            color: var(--primary);
+        }
+
+        .step-card p {
+            margin: 0 0 10px 0;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .matrix-display {
+            font-family: monospace;
+            white-space: pre;
+            background: #f8fafc;
+            padding: 10px;
             border-radius: 6px;
             border: 1px solid #e2e8f0;
             font-size: 0.9rem;
-            max-height: 250px;
-            overflow-y: auto;
+            overflow-x: auto;
         }
     </style>
 </head>
@@ -231,7 +261,7 @@
             <!-- Diisi otomatis oleh JavaScript -->
         </div>
     </div>
-    <div class="helper-text">* Kolom kosong yang tidak diisi akan otomatis dianggap bernilai 0. Nilai akan tetap aman saat mengganti mode.</div>
+    <div class="helper-text">* Kolom kosong yang tidak diisi otomatis dianggap 0. Nilai tetap aman saat mengganti mode.</div>
 
     <!-- Tombol Aksi -->
     <div class="btn-container">
@@ -243,13 +273,17 @@
 
     <!-- Area Hasil & Langkah -->
     <div class="result-section">
-        <h3>Hasil & Langkah Operasi Baris Elementer (OBE)</h3>
-        <div class="step-output" id="outputArea">Silakan masukkan nilai matriks lalu klik tombol "Hitung Kalkulasi".</div>
+        <h3>Langkah-Langkah & Hasil Operasi Baris Elementer (OBE)</h3>
+        <div class="steps-container" id="outputArea">
+            <div class="step-card">
+                <h4>Informasi</h4>
+                <p>Silakan masukkan nilai matriks lalu klik tombol "Hitung Kalkulasi" untuk melihat rincian langkah.</p>
+            </div>
+        </div>
     </div>
 </div>
 
 <script>
-    // Fungsi untuk menyimpan data input yang sedang diketik sebelum elemen di-render ulang
     function getExistingValues() {
         const oldContainer = document.getElementById('matrixContainer');
         const inputs = oldContainer.querySelectorAll('input');
@@ -267,7 +301,6 @@
         const container = document.getElementById('matrixContainer');
         container.innerHTML = '';
 
-        // Matriks A (n x n)
         const boxA = document.createElement('div');
         boxA.className = 'matrix-box';
         boxA.style.gridTemplateColumns = `repeat(${n}, 55px)`;
@@ -278,8 +311,6 @@
                 input.type = 'number';
                 input.step = 'any';
                 input.id = `a_${i}_${j}`;
-                
-                // Pulihkan nilai lama jika ada, jika tidak kosongkan/atur default
                 if (oldValues[`a_${i}_${j}`] !== undefined) {
                     input.value = oldValues[`a_${i}_${j}`];
                 } else {
@@ -290,13 +321,11 @@
         }
         container.appendChild(boxA);
 
-        // Pemisah
         const sep = document.createElement('div');
         sep.className = 'separator';
         sep.innerText = '|';
         container.appendChild(sep);
 
-        // Sisi Kanan (Vektor b atau Matriks Identitas I)
         const boxB = document.createElement('div');
         boxB.className = 'matrix-box';
         const colsRight = (mode === 'spl') ? 1 : n;
@@ -308,7 +337,6 @@
                 input.type = 'number';
                 input.step = 'any';
                 input.id = `b_${i}_${j}`;
-                
                 if (oldValues[`b_${i}_${j}`] !== undefined) {
                     input.value = oldValues[`b_${i}_${j}`];
                 } else {
@@ -346,21 +374,37 @@
     }
 
     function resetForm() {
-        const n = parseInt(document.getElementById('ordoSelect').value);
-        const mode = document.getElementById('modeSelect').value;
         const container = document.getElementById('matrixContainer');
         container.innerHTML = '';
         renderMatrixInputs();
-        document.getElementById('outputArea').innerText = 'Form telah direset.';
+        document.getElementById('outputArea').innerHTML = `
+            <div class="step-card">
+                <h4>Informasi</h4>
+                <p>Form telah direset. Silakan masukkan kembali nilai matriks.</p>
+            </div>`;
     }
 
     function salinHasil() {
-        const outputText = document.getElementById('outputArea').innerText;
-        navigator.clipboard.writeText(outputText).then(() => {
+        const outputContainer = document.getElementById('outputArea');
+        navigator.clipboard.writeText(outputContainer.innerText).then(() => {
             alert('Hasil berhasil disalin ke clipboard!');
         }).catch(err => {
             alert('Gagal menyalin teks.');
         });
+    }
+
+    function formatMatrixToString(mat, n, colsRight) {
+        let str = "";
+        for (let i = 0; i < n; i++) {
+            str += "[ ";
+            for (let j = 0; j < n + colsRight; j++) {
+                let val = Math.abs(mat[i][j]) < 1e-9 ? 0 : mat[i][j];
+                str += val.toFixed(2).padStart(6, ' ') + " ";
+                if (j === n - 1) str += "| ";
+            }
+            str += "]\n";
+        }
+        return str;
     }
 
     function hitungOBE() {
@@ -382,10 +426,20 @@
             matrix.push(row);
         }
 
-        let log = "Memulai proses Eliminasi Gauss-Jordan...\n\n";
+        let cardsHTML = "";
+
+        // Kartu Langkah 0: Matriks Awal
+        cardsHTML += `
+            <div class="step-card">
+                <h4>Langkah 0: Matriks Augmented Awal [A | b/I]</h4>
+                <p>Matriks awal yang dimasukkan sebelum dilakukan Operasi Baris Elementer.</p>
+                <div class="matrix-display">${formatMatrixToString(matrix, n, colsRight)}</div>
+            </div>
+        `;
 
         for (let i = 0; i < n; i++) {
             let pivot = matrix[i][i];
+            
             if (Math.abs(pivot) < 1e-9) {
                 let swapRow = -1;
                 for (let k = i + 1; k < n; k++) {
@@ -399,62 +453,96 @@
                     matrix[i] = matrix[swapRow];
                     matrix[swapRow] = temp;
                     pivot = matrix[i][i];
-                    log += `Tukar Baris ${i+1} dengan Baris ${swapRow+1}\n`;
+                    cardsHTML += `
+                        <div class="step-card">
+                            <h4>Pertukaran Baris</h4>
+                            <p>Tukar Baris ${i+1} dengan Baris ${swapRow+1} agar elemen pivot tidak bernilai nol.</p>
+                            <div class="matrix-display">${formatMatrixToString(matrix, n, colsRight)}</div>
+                        </div>
+                    `;
                 }
             }
 
             if (Math.abs(pivot) < 1e-9) {
-                document.getElementById('outputArea').innerText = log + "\nMatriks singular atau tidak memiliki solusi unik (determinan nol).";
+                cardsHTML += `
+                    <div class="step-card" style="border-left-color: #ef4444;">
+                        <h4>Peringatan Kesalahan</h4>
+                        <p>Matriks singular atau tidak memiliki solusi unik (determinan bernilai nol).</p>
+                    </div>
+                `;
+                document.getElementById('outputArea').innerHTML = cardsHTML;
                 return;
             }
 
-            for (let j = i; j < n + colsRight; j++) {
-                matrix[i][j] /= pivot;
+            if (Math.abs(pivot - 1) > 1e-9) {
+                for (let j = i; j < n + colsRight; j++) {
+                    matrix[i][j] /= pivot;
+                }
+                cardsHTML += `
+                    <div class="step-card">
+                        <h4>Langkah ${i+1}.1: Normalisasi Baris ${i+1}</h4>
+                        <p>Membagi Baris ${i+1} dengan nilai pivot (${pivot.toFixed(2)}) agar elemen diagonal menjadi 1.</p>
+                        <div class="matrix-display">${formatMatrixToString(matrix, n, colsRight)}</div>
+                    </div>
+                `;
             }
-            log += `Normalisasi Baris ${i+1} (B${i+1} / ${pivot.toFixed(2)})\n`;
 
+            let eliminationOccurred = false;
+            let subDesc = "";
             for (let k = 0; k < n; k++) {
                 if (k !== i) {
                     let factor = matrix[k][i];
-                    for (let j = i; j < n + colsRight; j++) {
-                        matrix[k][j] -= factor * matrix[i][j];
+                    if (Math.abs(factor) > 1e-9) {
+                        eliminationOccurred = true;
+                        subDesc += `Baris ${k+1} dikurangi (${factor.toFixed(2)}) × Baris ${i+1}<br>`;
+                        for (let j = i; j < n + colsRight; j++) {
+                            matrix[k][j] -= factor * matrix[i][j];
+                        }
                     }
                 }
             }
-        }
 
-        log += "\n--- Hasil Akhir Matriks Augmented ---\n";
-        for (let i = 0; i < n; i++) {
-            let rowStr = "[ ";
-            for (let j = 0; j < n + colsRight; j++) {
-                let val = Math.abs(matrix[i][j]) < 1e-9 ? 0 : matrix[i][j];
-                rowStr += val.toFixed(2) + " ";
-                if (j === n - 1) rowStr += "| ";
+            if (eliminationOccurred) {
+                cardsHTML += `
+                    <div class="step-card">
+                        <h4>Langkah ${i+1}.2: Eliminasi Kolom ${i+1}</h4>
+                        <p>${subDesc}</p>
+                        <div class="matrix-display">${formatMatrixToString(matrix, n, colsRight)}</div>
+                    </div>
+                `;
             }
-            rowStr += "]\n";
-            log += rowStr;
         }
 
+        // Kartu Hasil Akhir
+        let finalContent = "";
         if (mode === 'spl') {
-            log += "\nSolusi Variabel:\n";
+            finalContent += "Kesimpulan Nilai Variabel:<br>";
             for (let i = 0; i < n; i++) {
                 let val = Math.abs(matrix[i][n]) < 1e-9 ? 0 : matrix[i][n];
-                log += `x${i+1} = ${val.toFixed(2)}\n`;
+                finalContent += `<strong>x${i+1} = ${val.toFixed(2)}</strong><br>`;
             }
         } else {
-            log += "\nHasil Invers Matriks (Sisi Kanan):\n";
+            finalContent += "Hasil Invers Matriks A^(-1):<br>";
+            let invStr = "";
             for (let i = 0; i < n; i++) {
-                let rowStr = "[ ";
+                invStr += "[ ";
                 for (let j = n; j < 2 * n; j++) {
                     let val = Math.abs(matrix[i][j]) < 1e-9 ? 0 : matrix[i][j];
-                    rowStr += val.toFixed(2) + " ";
+                    invStr += val.toFixed(2).padStart(8, ' ') + " ";
                 }
-                rowStr += "]\n";
-                log += rowStr;
+                invStr += "]\n";
             }
+            finalContent += `<div class="matrix-display">${invStr}</div>`;
         }
 
-        document.getElementById('outputArea').innerText = log;
+        cardsHTML += `
+            <div class="step-card" style="border-left-color: #10b981; background-color: #f0fdf4;">
+                <h4 style="color: #047857;">Hasil Akhir Perhitungan</h4>
+                <p>${finalContent}</p>
+            </div>
+        `;
+
+        document.getElementById('outputArea').innerHTML = cardsHTML;
     }
 
     window.onload = function() {
